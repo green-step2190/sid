@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adityaa's Daily Routine & Alarm App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #74ebd5, #ACB6E5);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      width: 90%;
+      max-width: 500px;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #e3f2fd;
+      margin: 8px 0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .time {
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .done {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🕒 Adityaa's Daily Routine Planner</h2>
+  <input type="text" id="task" placeholder="Enter your task" />
+  <input type="time" id="taskTime" />
+  <button onclick="addTask()">Add Task</button>
+
+  <ul id="taskList"></ul>
+</div>
+
+<audio id="alarmSound">
+  <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+  Your browser does not support the audio element.
+</audio>
+
+<script>
+  let tasks = [];
+
+  function addTask() {
+    const taskText = document.getElementById('task').value.trim();
+    const time = document.getElementById('taskTime').value;
+
+    if (!taskText || !time) {
+      alert('Please enter both task and time.');
+      return;
+    }
+
+    const task = { text: taskText, time: time, done: false, triggered: false };
+    tasks.push(task);
+    saveTasks();
+    displayTasks();
+
+    document.getElementById('task').value = '';
+    document.getElementById('taskTime').value = '';
+  }
+
+  function toggleDone(index) {
+    tasks[index].done = !tasks[index].done;
+    saveTasks();
+    displayTasks();
+  }
+
+  function saveTasks() {
+    localStorage.setItem('routineTasks', JSON.stringify(tasks));
+  }
+
+  function loadTasks() {
+    const saved = localStorage.getItem('routineTasks');
+    if (saved) tasks = JSON.parse(saved);
+  }
+
+  function displayTasks() {
+    const list = document.getElementById('taskList');
+    list.innerHTML = '';
+    tasks.forEach((task, index) => {
+      const li = document.createElement('li');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = "checkbox";
+      checkbox.checked = task.done;
+      checkbox.onchange = () => toggleDone(index);
+
+      const span = document.createElement('span');
+      span.innerText = task.text;
+      if (task.done) span.classList.add('done');
+
+      const time = document.createElement('span');
+      time.className = "time";
+      time.innerText = task.time;
+
+      li.appendChild(checkbox);
+      li.appendChild(span);
+      li.appendChild(time);
+      list.appendChild(li);
+    });
+  }
+
+  function checkAlarm() {
+    const now = new Date();
+    const current = now.toTimeString().slice(0, 5);
+
+    tasks.forEach(task => {
+      if (task.time === current && !task.triggered && !task.done) {
+        playAlarm(task.text);
+        task.triggered = true;
+        saveTasks();
+      }
+    });
+  }
+
+  function playAlarm(taskName) {
+    const sound = document.getElementById('alarmSound');
+    sound.play();
+    alert("⏰ Alarm for: " + taskName);
+  }
+
+  loadTasks();
+  displayTasks();
+  setInterval(checkAlarm, 30000);
+</script>
+
+</body>
+</html>
